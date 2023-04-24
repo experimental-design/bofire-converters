@@ -1,4 +1,4 @@
-from bofire.data_models.api import domain
+from bofire.data_models.domain.api import Domain
 from opti.problems.cbo_benchmarks import (
     G4,
     G6,
@@ -13,7 +13,7 @@ from opti.problems.cbo_benchmarks import (
     TensionCompression,
     WeldedBeam1,
 )
-from opti.problems.mixed import Discrete, DiscreteFuelInjector, DiscreteVLMOP2
+from opti.problems.mixed import DiscreteFuelInjector, DiscreteVLMOP2
 
 from opti_to_domain import domain_from_opti
 
@@ -30,7 +30,6 @@ test_problems = [
     SpeedReducer,
     TensionCompression,
     WeldedBeam1,
-    Discrete,
     DiscreteFuelInjector,
     DiscreteVLMOP2,
 ]
@@ -41,4 +40,4 @@ def test_convert_benchmarks():
     for test_problem_class in test_problems:
         test_problem = test_problem_class()
         test_domain = domain_from_opti(test_problem)
-        assert isinstance(test_domain, domain)
+        assert isinstance(test_domain, Domain)

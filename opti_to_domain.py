@@ -1,14 +1,27 @@
-from bofire.data_models.api import domain
 from bofire.data_models.constraints.api import (
     LinearEqualityConstraint,
     LinearInequalityConstraint,
 )
+from bofire.data_models.domain.api import Domain
 from bofire.data_models.features.api import ContinuousInput, ContinuousOutput
 
 
-def domain_from_opti(opti_problem):
+def convert_inputs():
+    pass
 
-    bofire_domain = domain(
+
+def convert_iutputs_and_objectives():
+    pass
+
+
+def convert_constraints():
+    pass
+
+
+def domain_from_opti(opti_problem):
+    # new_domain = domain(conv_input_features,)
+
+    bofire_domain = Domain(
         input_features=[
             ContinuousInput(key="x1", bounds=(0, 1)),
             ContinuousInput(key="x2", bounds=(0.1, 1)),
