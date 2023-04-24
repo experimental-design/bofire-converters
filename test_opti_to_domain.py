@@ -1,25 +1,43 @@
-
+from bofire.data_models import domain
 from opti.problems.cbo_benchmarks import (
-    Gardner,
-    Gramacy,
     G4,
     G6,
     G7,
     G8,
     G10,
-    Sasena,
-    TensionCompression,
+    Gardner,
+    Gramacy,
     PressureVessel,
-    WeldedBeam1,
+    Sasena,
     SpeedReducer,
+    TensionCompression,
+    WeldedBeam1,
 )
-
 from opti.problems.mixed import Discrete, DiscreteFuelInjector, DiscreteVLMOP2
+
+from opti_to_domain import domain_from_opti
+
+test_problems = [
+    G4,
+    G6,
+    G7,
+    G8,
+    G10,
+    Gardner,
+    Gramacy,
+    PressureVessel,
+    Sasena,
+    SpeedReducer,
+    TensionCompression,
+    WeldedBeam1,
+    Discrete,
+    DiscreteFuelInjector,
+    DiscreteVLMOP2,
+]
 
 
 def test_convert_benchmarks():
-    # here 
+    # here
     test_problem = Gardner()
     test_domain = domain_from_opti(test_problem)
-    assert validity_of_test_domain
-    
+    assert isinstance(test_domain, domain)
