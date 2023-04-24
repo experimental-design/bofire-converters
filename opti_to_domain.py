@@ -1,7 +1,7 @@
-from bofire.data_models.constraints.api import (
-    LinearEqualityConstraint,
-    LinearInequalityConstraint,
-)
+#from bofire.data_models.constraints.api import (
+#    LinearEqualityConstraint,
+#    LinearInequalityConstraint,
+#pip )
 from bofire.data_models.domain.api import Domain
 from bofire.data_models.features.api import (
     CategoricalInput,
@@ -29,25 +29,18 @@ def convert_inputs():
 
     convert_types = (
         {
-            "discrete": DiscreteInput,
-            "continuous": ContinuousInput,
-            "categorical": CategoricalInput,
+            "discrete": {'type': DiscreteInput, 'domain': 'values'},
+            "continuous": {'type': ContinuousInput, 'domain': 'bounds'},
+            "categorical": {'type': CategoricalInput, 'domain': 'categories'},
         },
     )
     # convert_types_bounds={'discrete': values,'continuous': bounds,'categorical':categories},
 
     d_inputs = []
     for key, value in inputs.parameters.items():
-        if value.type == "categorical":
-            d_type = convert_types[value.type](key=key, categories=value.domain)
-        elif value.type == "continuous":
-            d_type = "somthinig else"
-
-    tmp = Categorical
-    # d_input=ContinuousInput(key="x1", bounds=(0, 1))
-    d_type
-    tmp
-
+        kwargs={'key':key, convert_types[value.type]['domain']:value.domain}
+        d_type = convert_types[value.type]['type'](kwargs)
+        d_inputs.append(d_type)
     return d_inputs
 
 
@@ -83,3 +76,6 @@ def domain_from_opti(opti_problem):
     )
 
     return bofire_domain
+
+if __name__ == "__main__":
+    convert_inputs()
