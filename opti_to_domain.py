@@ -44,7 +44,7 @@ def convert_inputs():
     return d_inputs
 
 
-def convert_intputs_and_objectives():
+def convert_outputs_and_objectives():
     pass
 
 
