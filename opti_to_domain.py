@@ -1,3 +1,5 @@
+from typing import List
+
 from bofire.data_models.constraints.api import (
     LinearEqualityConstraint,
     LinearInequalityConstraint,
@@ -10,12 +12,20 @@ from bofire.data_models.features.api import (
     DiscreteInput,
 )
 from opti import Categorical, Continuous, Discrete, Parameters
+from opti.constraint import (
+    Constraints,
+    LinearEquality,
+    LinearInequality,
+    NChooseK,
+    NonlinearEquality,
+    NonlinearInequality,
+)
 
 # Note: Parameter types are Continuous, Discrete Categorical from opti
 # Domain input_features can be ?
 
 
-def convert_inputs(inputs: Parameters):
+def convert_inputs(inputs: Parameters) -> List:
 
     # opti inputs example:
 
@@ -39,8 +49,25 @@ def convert_outputs_and_objectives():
     pass
 
 
-def convert_constraints():
-    pass
+def convert_constraints(opti_constraints: Constraints) -> List:
+
+    for cnstr in opti_constraints.get(types=LinearEquality):
+        print(cnstr.lhs)
+        print(cnstr.rhs)
+        print(cnstr.names)
+    for cnstr in opti_constraints.get(types=LinearInequality):
+        print(cnstr.lhs)
+        print(cnstr.rhs)
+        print(cnstr.names)
+    for cnstr in opti_constraints.get(types=NonlinearEquality):
+        print(cnstr.expression)
+    for cnstr in opti_constraints.get(types=NonlinearInequality):
+        print(cnstr.expression)
+    for cnstr in opti_constraints.get(types=NChooseK):
+        print(cnstr.max_active)
+        print(cnstr.names)
+
+    return []
 
 
 def domain_from_opti(opti_problem):
