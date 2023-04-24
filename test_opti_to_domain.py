@@ -1,4 +1,4 @@
-from bofire.data_models import domain
+from bofire.data_models.api import domain
 from opti.problems.cbo_benchmarks import (
     G4,
     G6,
@@ -38,6 +38,7 @@ test_problems = [
 
 def test_convert_benchmarks():
     # here
-    test_problem = Gardner()
-    test_domain = domain_from_opti(test_problem)
-    assert isinstance(test_domain, domain)
+    for test_problem_class in test_problems:
+        test_problem = test_problem_class()
+        test_domain = domain_from_opti(test_problem)
+        assert isinstance(test_domain, domain)
