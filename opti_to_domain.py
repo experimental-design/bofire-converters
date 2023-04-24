@@ -9,7 +9,7 @@ from bofire.data_models.features.api import (
     ContinuousOutput,
     DiscreteInput,
 )
-from opti import Categorical, Continuous, Discrete, Parameters
+from opti import Categorical, Continuous, Discrete, Parameters, Objectives, Minimize, Maximize, CloseToTarget
 
 # Note: Parameter types are Continuous, Discrete Categorical from opti
 # Domain input_features can be ?
@@ -36,6 +36,36 @@ def convert_inputs(inputs:Parameters):
 
 
 def convert_outputs_and_objectives():
+    # in domain, outputs have an optional objective embedded, whereas in opti, separate
+    
+    #opti example
+    outputs = Parameters(
+        [
+            Discrete("meetings", domain=[0.0, 1.0, 2.0, 3.0]),
+            Continuous("coffee", domain=[0, 20.0]),
+            Continuous("seriousness", domain=[0, 10.0]),
+            Categorical("animal", domain=["cat", "dog", "monkey"])
+        ]
+    )
+    
+    objectives = Objectives(
+        [
+            Minimize("meetings", target=2),
+            Maximize("coffee", target=4),
+            CloseToTarget("seriousness", target=5, exponent=2, tolerance=1.1),
+        ]
+    )
+    
+    # For outputs with no objects, add None objective 
+    # else, maps 1:1
+    
+    #Step 1: build outputs from objectives
+    
+    #Use set difference to fetch remaining outputs from outputs 
+    set(outputs.names).difference(set(objectives.names)) 
+    #Step 2: build outputs from remaining outputs
+    
+    
     pass
 
 
@@ -46,13 +76,13 @@ def convert_constraints():
 def domain_from_opti(opti_problem):
     # new_domain = domain(conv_input_features,)
 
-    bofire_domain = Domain(
-        input_features=[
+    bofire_domain = Domain.from_lists(
+        inputs=[
             ContinuousInput(key="x1", bounds=(0, 1)),
             ContinuousInput(key="x2", bounds=(0.1, 1)),
             ContinuousInput(key="x3", bounds=(0, 0.6)),
         ],
-        output_features=[ContinuousOutput(key="y")],
+        outputs=[ContinuousOutput(key="y")],
         constraints=[
             LinearEqualityConstraint(
                 features=["x1", "x2", "x3"], coefficients=[1, 1, 1], rhs=1
@@ -80,4 +110,4 @@ if __name__ == "__main__":
         ]
     )
 
-    convert_inputs(inputs)
+    print(convert_inputs(inputs))
