@@ -1,3 +1,5 @@
+from typing import List
+
 from bofire.data_models.constraints.api import (
     LinearEqualityConstraint,
     LinearInequalityConstraint,
@@ -10,15 +12,23 @@ from bofire.data_models.features.api import (
     DiscreteInput,
 )
 from opti import Categorical, Continuous, Discrete, Parameters, Objectives, Minimize, Maximize, CloseToTarget
+from opti.constraint import (
+    Constraints,
+    LinearEquality,
+    LinearInequality,
+    NChooseK,
+    NonlinearEquality,
+    NonlinearInequality,
+)
 
 # Note: Parameter types are Continuous, Discrete Categorical from opti
 # Domain input_features can be ?
 
 
-def convert_inputs(inputs:Parameters):
+def convert_inputs(inputs: Parameters) -> List:
 
     # opti inputs example:
-    
+
     convert_types = {
         "discrete": {"type": DiscreteInput, "domain": "values"},
         "continuous": {"type": ContinuousInput, "domain": "bounds"},
@@ -36,41 +46,49 @@ def convert_inputs(inputs:Parameters):
 
 
 def convert_outputs_and_objectives():
-    # in domain, outputs have an optional objective embedded, whereas in opti, separate
-    
-    #opti example
-    outputs = Parameters(
-        [
-            Discrete("meetings", domain=[0.0, 1.0, 2.0, 3.0]),
-            Continuous("coffee", domain=[0, 20.0]),
-            Continuous("seriousness", domain=[0, 10.0]),
-            Categorical("animal", domain=["cat", "dog", "monkey"])
-        ]
-    )
-    
-    objectives = Objectives(
-        [
-            Minimize("meetings", target=2),
-            Maximize("coffee", target=4),
-            CloseToTarget("seriousness", target=5, exponent=2, tolerance=1.1),
-        ]
-    )
-    
-    # For outputs with no objects, add None objective 
-    # else, maps 1:1
-    
-    #Step 1: build outputs from objectives
-    
-    #Use set difference to fetch remaining outputs from outputs 
-    set(outputs.names).difference(set(objectives.names)) 
-    #Step 2: build outputs from remaining outputs
-    
-    
     pass
 
 
-def convert_constraints():
-    pass
+def convert_constraints(opti_constraints: Constraints) -> List:
+    
+    for cnstr in opti_constraints.get(types=LinearEquality):
+        print(cnstr.lhs)
+        print(cnstr.rhs)
+        print(cnstr.names)
+    for cnstr in opti_constraints.get(types=LinearInequality):
+        print(cnstr.lhs)
+        print(cnstr.rhs)
+        print(cnstr.names)
+    for cnstr in opti_constraints.get(types=NonlinearEquality):
+        print(cnstr.expression)
+    for cnstr in opti_constraints.get(types=NonlinearInequality):
+        print(cnstr.expression)
+    for cnstr in opti_constraints.get(types=NChooseK):
+        print(cnstr.max_active)
+        print(cnstr.names)
+
+    return []
+
+
+def convert_constraints(opti_constraints: Constraints) -> List:
+
+    for cnstr in opti_constraints.get(types=LinearEquality):
+        print(cnstr.lhs)
+        print(cnstr.rhs)
+        print(cnstr.names)
+    for cnstr in opti_constraints.get(types=LinearInequality):
+        print(cnstr.lhs)
+        print(cnstr.rhs)
+        print(cnstr.names)
+    for cnstr in opti_constraints.get(types=NonlinearEquality):
+        print(cnstr.expression)
+    for cnstr in opti_constraints.get(types=NonlinearInequality):
+        print(cnstr.expression)
+    for cnstr in opti_constraints.get(types=NChooseK):
+        print(cnstr.max_active)
+        print(cnstr.names)
+
+    return []
 
 
 def domain_from_opti(opti_problem):
