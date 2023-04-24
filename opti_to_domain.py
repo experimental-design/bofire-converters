@@ -46,28 +46,37 @@ def convert_inputs(inputs: Parameters) -> List:
 
 
 def convert_outputs_and_objectives():
-    pass
-
-
-def convert_constraints(opti_constraints: Constraints) -> List:
+    # in domain, outputs have an optional objective embedded, whereas in opti, separate
     
-    for cnstr in opti_constraints.get(types=LinearEquality):
-        print(cnstr.lhs)
-        print(cnstr.rhs)
-        print(cnstr.names)
-    for cnstr in opti_constraints.get(types=LinearInequality):
-        print(cnstr.lhs)
-        print(cnstr.rhs)
-        print(cnstr.names)
-    for cnstr in opti_constraints.get(types=NonlinearEquality):
-        print(cnstr.expression)
-    for cnstr in opti_constraints.get(types=NonlinearInequality):
-        print(cnstr.expression)
-    for cnstr in opti_constraints.get(types=NChooseK):
-        print(cnstr.max_active)
-        print(cnstr.names)
-
-    return []
+    #opti example
+    outputs = Parameters(
+        [
+            Discrete("meetings", domain=[0.0, 1.0, 2.0, 3.0]),
+            Continuous("coffee", domain=[0, 20.0]),
+            Continuous("seriousness", domain=[0, 10.0]),
+            Categorical("animal", domain=["cat", "dog", "monkey"])
+        ]
+    )
+    
+    objectives = Objectives(
+        [
+            Minimize("meetings", target=2),
+            Maximize("coffee", target=4),
+            CloseToTarget("seriousness", target=5, exponent=2, tolerance=1.1),
+        ]
+    )
+    
+    # For outputs with no objects, add None objective 
+    # else, maps 1:1
+    
+    #Step 1: build outputs from objectives
+    
+    #Use set difference to fetch remaining outputs from outputs 
+    set(outputs.names).difference(set(objectives.names)) 
+    #Step 2: build outputs from remaining outputs
+    
+    
+    pass
 
 
 def convert_constraints(opti_constraints: Constraints) -> List:
