@@ -15,10 +15,10 @@ from opti import Categorical, Continuous, Discrete, Parameters
 # Domain input_features can be ?
 
 
-def convert_inputs(inputs:Parameters):
+def convert_inputs(inputs: Parameters):
 
     # opti inputs example:
-    
+
     convert_types = {
         "discrete": {"type": DiscreteInput, "domain": "values"},
         "continuous": {"type": ContinuousInput, "domain": "bounds"},
@@ -46,13 +46,13 @@ def convert_constraints():
 def domain_from_opti(opti_problem):
     # new_domain = domain(conv_input_features,)
 
-    bofire_domain = Domain(
-        input_features=[
+    bofire_domain = Domain.from_lists(
+        inputs=[
             ContinuousInput(key="x1", bounds=(0, 1)),
             ContinuousInput(key="x2", bounds=(0.1, 1)),
             ContinuousInput(key="x3", bounds=(0, 0.6)),
         ],
-        output_features=[ContinuousOutput(key="y")],
+        outputs=[ContinuousOutput(key="y")],
         constraints=[
             LinearEqualityConstraint(
                 features=["x1", "x2", "x3"], coefficients=[1, 1, 1], rhs=1
