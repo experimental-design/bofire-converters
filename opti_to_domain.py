@@ -15,19 +15,10 @@ from opti import Categorical, Continuous, Discrete, Parameters
 # Domain input_features can be ?
 
 
-def convert_inputs():
+def convert_inputs(inputs:Parameters):
 
     # opti inputs example:
-    inputs = Parameters(
-        [
-            Discrete("x1", domain=[0.0, 1.0, 2.0, 3.0]),
-            Continuous("x2", domain=[-2.0, 2.0]),
-            Continuous("x3", domain=[-2.0, 2.0]),
-            Continuous("x4", domain=[-2.0, 2.0]),
-            Categorical("x5", domain=["cat", "dog", "monkey"]),
-        ]
-    )
-
+    
     convert_types = {
         "discrete": {"type": DiscreteInput, "domain": "values"},
         "continuous": {"type": ContinuousInput, "domain": "bounds"},
@@ -79,4 +70,14 @@ def domain_from_opti(opti_problem):
 
 
 if __name__ == "__main__":
-    convert_inputs()
+    inputs = Parameters(
+        [
+            Discrete("x1", domain=[0.0, 1.0, 2.0, 3.0]),
+            Continuous("x2", domain=[-2.0, 2.0]),
+            Continuous("x3", domain=[-2.0, 2.0]),
+            Continuous("x4", domain=[-2.0, 2.0]),
+            Categorical("x5", domain=["cat", "dog", "monkey"]),
+        ]
+    )
+
+    convert_inputs(inputs)
