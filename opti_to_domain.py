@@ -3,6 +3,9 @@ from typing import List
 from bofire.data_models.constraints.api import (
     LinearEqualityConstraint,
     LinearInequalityConstraint,
+    NChooseKConstraint,
+    NonlinearEqualityConstraint,
+    NonlinearInequalityConstraint,
 )
 from bofire.data_models.domain.api import Domain
 from bofire.data_models.features.api import (
@@ -11,7 +14,16 @@ from bofire.data_models.features.api import (
     ContinuousOutput,
     DiscreteInput,
 )
-from opti import Categorical, Continuous, Discrete, Parameters, Objectives, Minimize, Maximize, CloseToTarget
+from opti import (
+    Categorical,
+    CloseToTarget,
+    Continuous,
+    Discrete,
+    Maximize,
+    Minimize,
+    Objectives,
+    Parameters,
+)
 from opti.constraint import (
     Constraints,
     LinearEquality,
@@ -47,17 +59,17 @@ def convert_inputs(inputs: Parameters) -> List:
 
 def convert_outputs_and_objectives():
     # in domain, outputs have an optional objective embedded, whereas in opti, separate
-    
-    #opti example
+
+    # opti example
     outputs = Parameters(
         [
             Discrete("meetings", domain=[0.0, 1.0, 2.0, 3.0]),
             Continuous("coffee", domain=[0, 20.0]),
             Continuous("seriousness", domain=[0, 10.0]),
-            Categorical("animal", domain=["cat", "dog", "monkey"])
+            Categorical("animal", domain=["cat", "dog", "monkey"]),
         ]
     )
-    
+
     objectives = Objectives(
         [
             Minimize("meetings", target=2),
@@ -65,39 +77,52 @@ def convert_outputs_and_objectives():
             CloseToTarget("seriousness", target=5, exponent=2, tolerance=1.1),
         ]
     )
-    
-    # For outputs with no objects, add None objective 
+
+    # For outputs with no objects, add None objective
     # else, maps 1:1
-    
-    #Step 1: build outputs from objectives
-    
-    #Use set difference to fetch remaining outputs from outputs 
-    set(outputs.names).difference(set(objectives.names)) 
-    #Step 2: build outputs from remaining outputs
-    
-    
+
+    # Step 1: build outputs from objectives
+
+    # Use set difference to fetch remaining outputs from outputs
+    set(outputs.names).difference(set(objectives.names))
+    # Step 2: build outputs from remaining outputs
+
     pass
 
 
 def convert_constraints(opti_constraints: Constraints) -> List:
-
+    domain_constraints = []
     for cnstr in opti_constraints.get(types=LinearEquality):
-        print(cnstr.lhs)
-        print(cnstr.rhs)
-        print(cnstr.names)
+        domain_constraints.append(
+            LinearEqualityConstraint(
+                features=cnstr.names, coefficients=cnstr.lhs.tolist(), rhs=cnstr.rhs
+            )
+        )
     for cnstr in opti_constraints.get(types=LinearInequality):
-        print(cnstr.lhs)
-        print(cnstr.rhs)
-        print(cnstr.names)
+        domain_constraints.append(
+            LinearInequalityConstraint(
+                features=cnstr.names, coefficients=cnstr.lhs.tolist(), rhs=cnstr.rhs
+            )
+        )
     for cnstr in opti_constraints.get(types=NonlinearEquality):
-        print(cnstr.expression)
+        domain_constraints.append(
+            NonlinearEqualityConstraint(expression=cnstr.expression)
+        )
     for cnstr in opti_constraints.get(types=NonlinearInequality):
-        print(cnstr.expression)
+        domain_constraints.append(
+            NonlinearInequalityConstraint(expression=cnstr.expression)
+        )
     for cnstr in opti_constraints.get(types=NChooseK):
-        print(cnstr.max_active)
-        print(cnstr.names)
+        domain_constraints.append(
+            NChooseKConstraint(
+                features=cnstr.names,
+                min_count=0,
+                max_count=cnstr.max_active,
+                none_also_valid=True,
+            )
+        )
 
-    return []
+    return domain_constraints
 
 
 def domain_from_opti(opti_problem):

@@ -1,5 +1,6 @@
 import pytest
 from bofire.data_models.domain.api import Domain
+from opti import Categorical, Continuous, Discrete, Parameters
 from opti.constraint import (
     Constraints,
     LinearEquality,
@@ -24,7 +25,7 @@ from opti.problems.cbo_benchmarks import (
 )
 from opti.problems.mixed import DiscreteFuelInjector, DiscreteVLMOP2
 
-from opti_to_domain import convert_constraints, domain_from_opti
+from opti_to_domain import convert_constraints, convert_inputs, domain_from_opti
 
 test_problems = [
     G4(),
@@ -61,4 +62,22 @@ def test_convert_constraints():
         ]
     )
     bofire_constraints = convert_constraints(cnstrs)
+    print(bofire_constraints)
     assert isinstance(bofire_constraints, list)
+    assert len(bofire_constraints) == 5
+
+
+def test_convert_inputs():
+    inputs = Parameters(
+        [
+            Discrete("x1", domain=[0.0, 1.0, 2.0, 3.0]),
+            Continuous("x2", domain=[-2.0, 2.0]),
+            Continuous("x3", domain=[-2.0, 2.0]),
+            Continuous("x4", domain=[-2.0, 2.0]),
+            Categorical("x5", domain=["cat", "dog", "monkey"]),
+        ]
+    )
+
+    bofire_inputs = convert_inputs(inputs)
+    assert isinstance(bofire_inputs, list)
+    assert len(bofire_inputs) == 5
