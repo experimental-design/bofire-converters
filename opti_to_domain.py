@@ -23,6 +23,7 @@ from opti import (
     Minimize,
     Objectives,
     Parameters,
+    Problem,
 )
 from opti.constraint import (
     Constraints,
@@ -125,27 +126,21 @@ def convert_constraints(opti_constraints: Constraints) -> List:
     return domain_constraints
 
 
-def domain_from_opti(opti_problem):
+def domain_from_opti(opti_problem: Problem) -> Domain:
     # new_domain = domain(conv_input_features,)
 
+    domain_inputs = convert_inputs(opti_problem.inputs)
+    if opti_problem.constraints is not None:
+        domain_constraints = convert_constraints(opti_problem.constraints)
+    else:
+        domain_constraints = None
+
     bofire_domain = Domain.from_lists(
-        inputs=[
-            ContinuousInput(key="x1", bounds=(0, 1)),
-            ContinuousInput(key="x2", bounds=(0.1, 1)),
-            ContinuousInput(key="x3", bounds=(0, 0.6)),
-        ],
-        outputs=[ContinuousOutput(key="y")],
-        constraints=[
-            LinearEqualityConstraint(
-                features=["x1", "x2", "x3"], coefficients=[1, 1, 1], rhs=1
-            ),
-            LinearInequalityConstraint(
-                features=["x1", "x2"], coefficients=[5, 4], rhs=3.9
-            ),
-            LinearInequalityConstraint(
-                features=["x1", "x2"], coefficients=[-20, 5], rhs=-3
-            ),
-        ],
+        inputs=domain_inputs,
+        outputs=[
+            ContinuousOutput(key="y")
+        ],  # replace this with the converted outputs and objectives
+        constraints=domain_constraints,
     )
 
     return bofire_domain

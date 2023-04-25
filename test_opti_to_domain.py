@@ -49,6 +49,9 @@ test_problems = [
 def test_convert_benchmarks(test_problem):
     bofire_domain = domain_from_opti(test_problem)
     assert isinstance(bofire_domain, Domain)
+    assert len(test_problem.inputs) == len(bofire_domain.inputs)
+    if test_problem.constraints is not None:
+        assert len(test_problem.constraints) == len(bofire_domain.constraints)
 
 
 def test_convert_constraints():
