@@ -84,3 +84,26 @@ def test_convert_inputs():
     bofire_inputs = convert_inputs(inputs)
     assert isinstance(bofire_inputs, list)
     assert len(bofire_inputs) == 5
+
+def test_convert_outputs_and_objectives():
+    outputs = Parameters(
+        [
+            Discrete("meetings", domain=[0.0, 1.0, 2.0, 3.0]),
+            Continuous("coffee", domain=[0, 20.0]),
+            Continuous("seriousness", domain=[0, 10.0]),
+            Categorical("animal", domain=["cat", "dog", "monkey"])
+        ]
+    )
+    
+    objectives = Objectives(
+        [
+            Minimize("meetings", target=2),
+            Maximize("coffee", target=4),
+            CloseToTarget("seriousness", target=5, exponent=2, tolerance=1.1),
+        ]
+    )
+
+    out_list = convert_outputs_and_objectives(outputs, objectives)
+    
+    assert out_list[0].type == 'MinimizeObjective'
+    assert out_list[-1].type == 'categorical'
