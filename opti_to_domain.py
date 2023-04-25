@@ -1,3 +1,4 @@
+from time import process_time_ns
 from typing import List
 
 from bofire.data_models.constraints.api import (
@@ -11,6 +12,13 @@ from bofire.data_models.features.api import (
     ContinuousOutput,
     DiscreteInput,
 )
+
+from bofire.data_models.objectives.api import (
+    MaximizeObjective,
+    MinimizeObjective,
+    CloseToTargetObjective,
+)
+
 from opti import Categorical, Continuous, Discrete, Parameters, Objectives, Minimize, Maximize, CloseToTarget
 from opti.constraint import (
     Constraints,
@@ -47,7 +55,7 @@ def convert_inputs(inputs: Parameters) -> List:
 
 def convert_outputs_and_objectives():
     # in domain, outputs have an optional objective embedded, whereas in opti, separate
-    
+    # Questions: https://github.com/experimental-design/bofire/issues/77#issuecomment-1521418422
     #opti example
     outputs = Parameters(
         [
@@ -66,13 +74,28 @@ def convert_outputs_and_objectives():
         ]
     )
     
+    # Can build domain from a bunch of lists, so need to build a list 
     # For outputs with no objects, add None objective 
     # else, maps 1:1
     
+    objective_list=[]
     #Step 1: build outputs from objectives
-    
+    for o in objectives: 
+        if isinstance(o, CloseToTarget):
+            # then build a CloseToTargetObjective
+            obj = CloseToTargetObjective(key=o.name, target=o.target, exponent=o.exponent)
+            # Problem: what do I do with the tolerance? 
+        elif isinstance(o, Maximize): 
+            obj = MaximizeObjective(key=o.name)
+        elif isinstance(o, Minimize):    
+            obj = MinimizeObjective(key=o.name)
+        else: # throw an unhandled exception
+            raise Exception("Unhandled objective type")
+        objective_list.append(obj)    
     #Use set difference to fetch remaining outputs from outputs 
-    set(outputs.names).difference(set(objectives.names)) 
+    non_objectives = set(outputs.names).difference(set(objectives.names)) 
+    
+    
     #Step 2: build outputs from remaining outputs
     
     
@@ -127,14 +150,37 @@ def domain_from_opti(opti_problem):
 
 
 if __name__ == "__main__":
-    inputs = Parameters(
+    # inputs = Parameters(
+    #     [
+    #         Discrete("x1", domain=[0.0, 1.0, 2.0, 3.0]),
+    #         Continuous("x2", domain=[-2.0, 2.0]),
+    #         Continuous("x3", domain=[-2.0, 2.0]),
+    #         Continuous("x4", domain=[-2.0, 2.0]),
+    #         Categorical("x5", domain=["cat", "dog", "monkey"]),
+    #     ]
+    # )
+
+    # print(convert_inputs(inputs))
+    outputs = Parameters(
         [
-            Discrete("x1", domain=[0.0, 1.0, 2.0, 3.0]),
-            Continuous("x2", domain=[-2.0, 2.0]),
-            Continuous("x3", domain=[-2.0, 2.0]),
-            Continuous("x4", domain=[-2.0, 2.0]),
-            Categorical("x5", domain=["cat", "dog", "monkey"]),
+            Discrete("meetings", domain=[0.0, 1.0, 2.0, 3.0]),
+            Continuous("coffee", domain=[0, 20.0]),
+            Continuous("seriousness", domain=[0, 10.0]),
+            Categorical("animal", domain=["cat", "dog", "monkey"])
         ]
     )
-
-    print(convert_inputs(inputs))
+    
+    objectives = Objectives(
+        [
+            Minimize("meetings", target=2),
+            Maximize("coffee", target=4),
+            CloseToTarget("seriousness", target=5, exponent=2, tolerance=1.1),
+        ]
+    )
+    
+    for o in objectives: 
+        print(o.__dict__)
+        print(o.type)
+        if isinstance(o, CloseToTarget):
+            o.__dict__["tolerance"]
+            
