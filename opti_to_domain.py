@@ -4,6 +4,9 @@ from typing import List
 from bofire.data_models.constraints.api import (
     LinearEqualityConstraint,
     LinearInequalityConstraint,
+    NChooseKConstraint,
+    NonlinearEqualityConstraint,
+    NonlinearInequalityConstraint,
 )
 from bofire.data_models.domain.api import Domain
 from bofire.data_models.features.api import (
@@ -19,7 +22,17 @@ from bofire.data_models.objectives.api import (
     CloseToTargetObjective,
 )
 
-from opti import Categorical, Continuous, Discrete, Parameters, Objectives, Minimize, Maximize, CloseToTarget
+from opti import (
+    Categorical,
+    CloseToTarget,
+    Continuous,
+    Discrete,
+    Maximize,
+    Minimize,
+    Objectives,
+    Parameters,
+    Problem,
+)
 from opti.constraint import (
     Constraints,
     LinearEquality,
@@ -55,17 +68,17 @@ def convert_inputs(inputs: Parameters) -> List:
 
 def convert_outputs_and_objectives():
     # in domain, outputs have an optional objective embedded, whereas in opti, separate
-    # Questions: https://github.com/experimental-design/bofire/issues/77#issuecomment-1521418422
-    #opti example
+# Questions: https://github.com/experimental-design/bofire/issues/77#issuecomment-1521418422
+    # opti example
     outputs = Parameters(
         [
             Discrete("meetings", domain=[0.0, 1.0, 2.0, 3.0]),
             Continuous("coffee", domain=[0, 20.0]),
             Continuous("seriousness", domain=[0, 10.0]),
-            Categorical("animal", domain=["cat", "dog", "monkey"])
+            Categorical("animal", domain=["cat", "dog", "monkey"]),
         ]
     )
-    
+
     objectives = Objectives(
         [
             Minimize("meetings", target=2),
@@ -73,13 +86,13 @@ def convert_outputs_and_objectives():
             CloseToTarget("seriousness", target=5, exponent=2, tolerance=1.1),
         ]
     )
-    
+
     # Can build domain from a bunch of lists, so need to build a list 
-    # For outputs with no objects, add None objective 
+    # For outputs with no objects, add None objective
     # else, maps 1:1
-    
+
     objective_list=[]
-    #Step 1: build outputs from objectives
+    # Step 1: build outputs from objectives
     for o in objectives: 
         if isinstance(o, CloseToTarget):
             # then build a CloseToTargetObjective
@@ -91,59 +104,66 @@ def convert_outputs_and_objectives():
             obj = MinimizeObjective(key=o.name)
         else: # throw an unhandled exception
             raise Exception("Unhandled objective type")
-        objective_list.append(obj)    
-    #Use set difference to fetch remaining outputs from outputs 
-    non_objectives = set(outputs.names).difference(set(objectives.names)) 
+        objective_list.append(obj)
+    # Use set difference to fetch remaining outputs from outputs
+    non_objectives = set(outputs.names).difference(set(objectives.names))
     
     
-    #Step 2: build outputs from remaining outputs
-    
-    
+    # Step 2: build outputs from remaining outputs
+
     pass
 
 
 def convert_constraints(opti_constraints: Constraints) -> List:
-
+    domain_constraints = []
     for cnstr in opti_constraints.get(types=LinearEquality):
-        print(cnstr.lhs)
-        print(cnstr.rhs)
-        print(cnstr.names)
+        domain_constraints.append(
+            LinearEqualityConstraint(
+                features=cnstr.names, coefficients=cnstr.lhs.tolist(), rhs=cnstr.rhs
+            )
+        )
     for cnstr in opti_constraints.get(types=LinearInequality):
-        print(cnstr.lhs)
-        print(cnstr.rhs)
-        print(cnstr.names)
+        domain_constraints.append(
+            LinearInequalityConstraint(
+                features=cnstr.names, coefficients=cnstr.lhs.tolist(), rhs=cnstr.rhs
+            )
+        )
     for cnstr in opti_constraints.get(types=NonlinearEquality):
-        print(cnstr.expression)
+        domain_constraints.append(
+            NonlinearEqualityConstraint(expression=cnstr.expression)
+        )
     for cnstr in opti_constraints.get(types=NonlinearInequality):
-        print(cnstr.expression)
+        domain_constraints.append(
+            NonlinearInequalityConstraint(expression=cnstr.expression)
+        )
     for cnstr in opti_constraints.get(types=NChooseK):
-        print(cnstr.max_active)
-        print(cnstr.names)
+        domain_constraints.append(
+            NChooseKConstraint(
+                features=cnstr.names,
+                min_count=0,
+                max_count=cnstr.max_active,
+                none_also_valid=True,
+            )
+        )
 
-    return []
+    return domain_constraints
 
 
-def domain_from_opti(opti_problem):
+def domain_from_opti(opti_problem: Problem) -> Domain:
     # new_domain = domain(conv_input_features,)
 
+    domain_inputs = convert_inputs(opti_problem.inputs)
+    if opti_problem.constraints is not None:
+        domain_constraints = convert_constraints(opti_problem.constraints)
+    else:
+        domain_constraints = None
+
     bofire_domain = Domain.from_lists(
-        inputs=[
-            ContinuousInput(key="x1", bounds=(0, 1)),
-            ContinuousInput(key="x2", bounds=(0.1, 1)),
-            ContinuousInput(key="x3", bounds=(0, 0.6)),
-        ],
-        outputs=[ContinuousOutput(key="y")],
-        constraints=[
-            LinearEqualityConstraint(
-                features=["x1", "x2", "x3"], coefficients=[1, 1, 1], rhs=1
-            ),
-            LinearInequalityConstraint(
-                features=["x1", "x2"], coefficients=[5, 4], rhs=3.9
-            ),
-            LinearInequalityConstraint(
-                features=["x1", "x2"], coefficients=[-20, 5], rhs=-3
-            ),
-        ],
+        inputs=domain_inputs,
+        outputs=[
+            ContinuousOutput(key="y")
+        ],  # replace this with the converted outputs and objectives
+        constraints=domain_constraints,
     )
 
     return bofire_domain
