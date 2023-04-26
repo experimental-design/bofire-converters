@@ -90,7 +90,7 @@ def convert_outputs_and_objectives(outputs: Parameters, objectives: Objectives) 
         if outputs.parameters[o.name].type == "continuous"
             out=ContinuousOutput(key=o.name, objective=obj)
         else: 
-            out=Output(key=o.name, objective=obj, type=o.type)
+            out=Output(key=o.name, objective=obj, type=outputs.parameters[o.name].type)
         output_list.append(out)
     # Use set difference to fetch remaining outputs from outputs
     non_objectives = set(outputs.names).difference(set(objectives.names))
