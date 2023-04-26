@@ -105,5 +105,6 @@ def test_convert_outputs_and_objectives():
 
     out_list = convert_outputs_and_objectives(outputs, objectives)
     
+    
     assert out_list[0].type == 'MinimizeObjective'
     assert out_list[-1].type == 'categorical'

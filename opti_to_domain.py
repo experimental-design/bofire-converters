@@ -86,7 +86,12 @@ def convert_outputs_and_objectives(outputs: Parameters, objectives: Objectives) 
             obj = MinimizeObjective(key=o.name)
         else:  # throw an unhandled exception
             raise Exception("Unhandled objective type")
-        output_list.append(obj)
+        
+        if o.type == "continuous":
+            out=ContinuousOutput(key=o.name, objective=obj)
+        else: 
+            out=Output(key=o.name, objective=obj, type=o.type)
+        output_list.append(out)
     # Use set difference to fetch remaining outputs from outputs
     non_objectives = set(outputs.names).difference(set(objectives.names))
 
