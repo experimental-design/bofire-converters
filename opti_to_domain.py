@@ -88,7 +88,7 @@ def convert_outputs_and_objectives(outputs:Parameters, objectives:Objectives):
         else: # throw an unhandled exception
             raise Exception("Unhandled objective type")
         
-        if o.type == "continuous":
+        if outputs.parameters[o.name].type == "continuous"
             out=ContinuousOutput(key=o.name, objective=obj)
         else: 
             out=Output(key=o.name, objective=obj, type=o.type)
