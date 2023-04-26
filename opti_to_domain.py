@@ -72,35 +72,34 @@ def convert_outputs_and_objectives(outputs: Parameters, objectives: Objectives) 
     # For outputs with no objects, add None objective
 
     output_list = []
-    # Step 1: build outputs from objectives
-    for o in objectives:
-        if isinstance(o, CloseToTarget):
-            # then build a CloseToTargetObjective
-            obj = CloseToTargetObjective(
-                key=o.name, target_value=o.target, exponent=o.exponent
-            )
-            # Problem: what do I do with the tolerance? Should this be TargetObjective?
-        elif isinstance(o, Maximize):
-            obj = MaximizeObjective(key=o.name)
-        elif isinstance(o, Minimize):
-            obj = MinimizeObjective(key=o.name)
-        else:  # throw an unhandled exception
-            raise Exception("Unhandled objective type")
-        
-        if outputs.parameters[o.name].type == "continuous"
-            out=ContinuousOutput(key=o.name, objective=obj)
-        else: 
-            out=Output(key=o.name, objective=obj, type=o.type)
-        output_list.append(out)
-    # Use set difference to fetch remaining outputs from outputs
-    non_objectives = set(outputs.names).difference(set(objectives.names))
+    for opti_out in outputs:
+        if opti_out.name in objectives.names:
+            obj = [obj for obj in objectives if obj.name == opti_out.name]
+            if len(obj) > 1:
+                raise NotImplementedError(
+                    "Outputs appearing in multiple constraints is not yet supported in the converter."
+                )
+            else:
+                obj = obj[0]
+        else:
+            obj = None
 
-    # Step 2: build outputs from remaining outputs
-    for o in non_objectives:
-        if outputs.parameters[o].type == "continuous":
-            out = ContinuousOutput(key=o, objective=None)
-        else:  # is this how to handle non-continuous (categorical and discrete) outputs?
-            out = Output(key=o, objective=None, type=outputs.parameters[o].type)
+        if isinstance(obj, CloseToTarget):
+            # then build a CloseToTargetObjective
+            obj = CloseToTargetObjective(target_value=obj.target, exponent=obj.exponent)
+            # Problem: what do I do with the tolerance? Should this be TargetObjective?
+        elif isinstance(obj, Maximize):
+            obj = MaximizeObjective()
+        elif isinstance(obj, Minimize):
+            obj = MinimizeObjective()
+        elif obj is not None:  # throw an unhandled exception
+            print(obj)
+            raise Exception("Unhandled objective type")
+
+        if opti_out.type == "continuous":
+            out = ContinuousOutput(key=opti_out.name, objective=obj)
+        else:
+            out = Output(key=opti_out.name, objective=obj, type=opti_out.type)
         output_list.append(out)
 
     return output_list
