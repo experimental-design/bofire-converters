@@ -1,6 +1,15 @@
 import pytest
 from bofire.data_models.domain.api import Domain
-from opti import Categorical, Continuous, Discrete, Parameters
+from opti import (
+    Categorical,
+    CloseToTarget,
+    Continuous,
+    Discrete,
+    Maximize,
+    Minimize,
+    Objectives,
+    Parameters,
+)
 from opti.constraint import (
     Constraints,
     LinearEquality,
@@ -25,7 +34,12 @@ from opti.problems.cbo_benchmarks import (
 )
 from opti.problems.mixed import DiscreteFuelInjector, DiscreteVLMOP2
 
-from opti_to_domain import convert_constraints, convert_inputs, domain_from_opti
+from opti_to_domain import (
+    convert_constraints,
+    convert_inputs,
+    convert_outputs_and_objectives,
+    domain_from_opti,
+)
 
 test_problems = [
     G4(),
@@ -85,16 +99,17 @@ def test_convert_inputs():
     assert isinstance(bofire_inputs, list)
     assert len(bofire_inputs) == 5
 
+
 def test_convert_outputs_and_objectives():
     outputs = Parameters(
         [
             Discrete("meetings", domain=[0.0, 1.0, 2.0, 3.0]),
             Continuous("coffee", domain=[0, 20.0]),
             Continuous("seriousness", domain=[0, 10.0]),
-            Categorical("animal", domain=["cat", "dog", "monkey"])
+            Categorical("animal", domain=["cat", "dog", "monkey"]),
         ]
     )
-    
+
     objectives = Objectives(
         [
             Minimize("meetings", target=2),
@@ -104,7 +119,6 @@ def test_convert_outputs_and_objectives():
     )
 
     out_list = convert_outputs_and_objectives(outputs, objectives)
-    
-    
-    assert out_list[0].type == 'MinimizeObjective'
-    assert out_list[-1].type == 'categorical'
+
+    assert out_list[0].type == "MinimizeObjective"
+    assert out_list[-1].type == "categorical"
