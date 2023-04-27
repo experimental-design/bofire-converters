@@ -1,0 +1,2 @@
+mopti==0.10.10
+bofire @ git+https://github.com/experimental-design/bofire.git@01d301df27f5cccf5087f37ec9b43a6e12401d04
