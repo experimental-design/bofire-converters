@@ -45,9 +45,28 @@ from opti.constraint import (
 
 
 def convert_inputs(inputs: Parameters) -> List:
+    """Make the Bofire equivalent to a Parameters objects from (m)opti
 
-    # opti inputs example:
+    Parameters:
+        inputs: The inputs from an opti problem generated using
+        Parameters
 
+    Returns:
+        List of BoFire parameters, eg, ContinuousInput
+
+    Examples:
+        # Parameters, Discrete, Continuous and Categorical are from mopti
+        inputs = Parameters(
+            [
+                Discrete("x1", domain=[0.0, 1.0, 2.0, 3.0]),
+                Continuous("x2", domain=[-2.0, 2.0]),
+                Continuous("x3", domain=[-2.0, 2.0]),
+                Continuous("x4", domain=[-2.0, 2.0]),
+                Categorical("x5", domain=["cat", "dog", "monkey"]),
+            ]
+        )
+        convert_inputs(inputs)
+    """
     convert_types = {
         "discrete": {"type": DiscreteInput, "domain": "values"},
         "continuous": {"type": ContinuousInput, "domain": "bounds"},
@@ -65,11 +84,26 @@ def convert_inputs(inputs: Parameters) -> List:
 
 
 def convert_outputs_and_objectives(outputs: Parameters, objectives: Objectives) -> List:
-    # in domain, outputs have an optional objective embedded, whereas in opti, separate
-    # Questions: https://github.com/experimental-design/bofire/issues/77#issuecomment-1521418422
+    """Make BoFire outputs from opti outputs and objectives
 
-    # Can build domain from a bunch of lists, so need to build a list
-    # For outputs with no objects, add None objective
+    opti specifies experimental outputs, which are quantities to be observed
+    and (at least) predicted, and also objectives, which refer by name to the
+    outputs. Bofire does it differently; objectives are specified within
+    outputs so that a list of bofire outputs contains the same information as both
+    outputs and objectives from opti.
+
+    Questions about parameters and tolerances:
+    https://github.com/experimental-design/bofire/issues/77#issuecomment-1521418422
+
+    Parameters:
+        outputs: outputs from opti. These are quantities that get modelled and are
+            usually generated using the Parameters function from opti.
+        objectives: objectives from opti. These refer to the names of the
+            outputs to determine what is to be optimized
+
+    Returns:
+        List of BoFire outputs
+    """
 
     output_list = []
     for opti_out in outputs:
@@ -105,6 +139,16 @@ def convert_outputs_and_objectives(outputs: Parameters, objectives: Objectives) 
 
 
 def convert_constraints(opti_constraints: Constraints) -> List:
+    """opti constraints to bofire constraints
+
+    Just straightforward renaming here.
+
+    Parameters:
+        opti_constraints: The constraints to be converted
+
+    Returns:
+        List of bofire constraints
+    """
     domain_constraints = []
     for cnstr in opti_constraints.get(types=LinearEquality):
         domain_constraints.append(
@@ -139,8 +183,33 @@ def convert_constraints(opti_constraints: Constraints) -> List:
     return domain_constraints
 
 
-def domain_from_opti(opti_problem: Problem) -> Domain:
-    # new_domain = domain(conv_input_features,)
+def convert_problem(opti_problem: Problem) -> Domain:
+    """Turn an opti problem into the equivalent bofire domain
+
+    Parameters:
+        opti_problem: Problem object from opti for conversion
+
+    Returns:
+        Domain, able to be used as a problem definition by bofire.
+
+    Examples:
+    myproblem = Problem(
+                    inputs=Parameters(
+                        [Continuous('x1', domain=[78.0, 102.0]),
+                         Continuous('x2', domain=[33.0, 45.0])]
+                    ),
+                    outputs=Parameters(
+                        [Continuous('y0')]
+                    ),
+                    objectives=Objectives(
+                    [Minimize('y0')]
+                    ),
+                    constraints=Constraints(
+                        [NonlinearInequality('(85.334407 + 0.0056858 * x2 * x1 ) - 92.0')]
+                    ),
+                )
+    mydomain = convert_problem(myproblem)
+    """
 
     domain_inputs = convert_inputs(opti_problem.inputs)
     if opti_problem.constraints is not None:

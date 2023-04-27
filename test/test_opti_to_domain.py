@@ -34,11 +34,11 @@ from opti.problems.cbo_benchmarks import (
 )
 from opti.problems.mixed import DiscreteFuelInjector, DiscreteVLMOP2
 
-from opti_to_domain import (
+from domainconverters.opti_to_domain import (
     convert_constraints,
     convert_inputs,
     convert_outputs_and_objectives,
-    domain_from_opti,
+    convert_problem,
 )
 
 test_problems = [
@@ -61,7 +61,7 @@ test_problems = [
 
 @pytest.mark.parametrize("test_problem", test_problems)
 def test_convert_benchmarks(test_problem):
-    bofire_domain = domain_from_opti(test_problem)
+    bofire_domain = convert_problem(test_problem)
     assert isinstance(bofire_domain, Domain)
     assert len(test_problem.inputs) == len(bofire_domain.inputs)
     if test_problem.constraints is not None:
