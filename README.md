@@ -2,7 +2,7 @@
 
 These tools are to help with migration of legacy applications from other BO frameworks to BoFire, and improve quality-of-life.
 
-# Quick start
+## Quick start
 
 Clone this repo, then change to the directory you just cloned (the one containing setup.py) and do 
 
