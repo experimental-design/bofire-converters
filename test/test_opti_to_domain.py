@@ -33,6 +33,16 @@ from opti.problems.cbo_benchmarks import (
     WeldedBeam1,
 )
 from opti.problems.mixed import DiscreteFuelInjector, DiscreteVLMOP2
+from opti.problems.multi import (
+    Daechert1,
+    Daechert2,
+    Daechert3,
+    Hyperellipsoid,
+    OmniTest,
+    Poloni,
+    Qapi1,
+    WeldedBeam,
+)
 
 from domainconverters.opti_to_domain import (
     convert_constraints,
@@ -56,6 +66,14 @@ test_problems = [
     WeldedBeam1(),
     DiscreteFuelInjector(),
     DiscreteVLMOP2(),
+    Daechert1(),
+    Daechert2(),
+    Daechert3(),
+    Poloni(),
+    Qapi1(),
+    WeldedBeam(),
+    Hyperellipsoid(),
+    OmniTest(),
 ]
 
 
