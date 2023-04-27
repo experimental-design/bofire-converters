@@ -87,7 +87,6 @@ def convert_outputs_and_objectives(outputs: Parameters, objectives: Objectives) 
         if isinstance(obj, CloseToTarget):
             # then build a CloseToTargetObjective
             obj = CloseToTargetObjective(target_value=obj.target, exponent=obj.exponent)
-            # Problem: what do I do with the tolerance? Should this be TargetObjective?
         elif isinstance(obj, Maximize):
             obj = MaximizeObjective()
         elif isinstance(obj, Minimize):
