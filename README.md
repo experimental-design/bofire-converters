@@ -15,6 +15,6 @@ from domainconverters.opti_to_domain import convert_problem
 from opti.problems.multi import Daechert1
 
 # Use one of the opti built-in problems as an example
-myproblem = Daechert1()                    
-mydomain = convert_problem(myproblem)
+my_opti_problem = Daechert1()                    
+my_bofire_domain = convert_problem(my_opti_problem)
 ```
