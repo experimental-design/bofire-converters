@@ -90,7 +90,13 @@ test_problems = [
 
 @pytest.mark.parametrize("test_problem", test_problems)
 def test_convert_benchmarks(test_problem):
-    bofire_domain = convert_problem(test_problem)
+    if not all(
+        [otype == "continuous" for otype in [o.type for o in test_problem.outputs]]
+    ):
+        with pytest.warns(UserWarning):
+            bofire_domain = convert_problem(test_problem)
+    else:
+        bofire_domain = convert_problem(test_problem)
     assert isinstance(bofire_domain, Domain)
     assert len(test_problem.inputs) == len(bofire_domain.inputs)
     if test_problem.constraints is not None:
@@ -147,7 +153,10 @@ def test_convert_outputs_and_objectives():
         ]
     )
 
-    out_list = convert_outputs_and_objectives(outputs, objectives)
+    with pytest.warns(UserWarning):
+        out_list = convert_outputs_and_objectives(outputs, objectives)
 
-    assert out_list[0].type == "discrete"
-    assert out_list[-1].type == "categorical"
+    assert len(out_list) == 4
+    # we used to check these but now all outputs are converted to continuous
+    # assert out_list[0].type == "discrete"
+    # assert out_list[-1].type == "categorical"

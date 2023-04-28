@@ -1,4 +1,5 @@
-from typing import List
+from typing import List, Optional
+from warnings import warn
 
 from bofire.data_models.constraints.api import (
     LinearEqualityConstraint,
@@ -13,7 +14,6 @@ from bofire.data_models.features.api import (
     ContinuousInput,
     ContinuousOutput,
     DiscreteInput,
-    Output,
 )
 from bofire.data_models.objectives.api import (
     CloseToTargetObjective,
@@ -83,7 +83,11 @@ def convert_inputs(inputs: Parameters) -> List:
     return d_inputs
 
 
-def convert_outputs_and_objectives(outputs: Parameters, objectives: Objectives) -> List:
+def convert_outputs_and_objectives(
+    outputs: Parameters,
+    objectives: Objectives,
+    output_constraints: Optional[Objectives] = None,
+) -> List:
     """Make BoFire outputs from opti outputs and objectives
 
     opti specifies experimental outputs, which are quantities to be observed
@@ -104,36 +108,44 @@ def convert_outputs_and_objectives(outputs: Parameters, objectives: Objectives) 
     Returns:
         List of BoFire outputs
     """
+    # Treat output constraints from opti problems like objectives
+    if output_constraints is not None:
+        objectives = Objectives(objectives.objectives + output_constraints.objectives)
+
+    # create a dict where each key is an output and the values are the objectives in which
+    # that output appears
+    outs_and_objs = {
+        opti_out.name: [obj for obj in objectives if obj.name == opti_out.name]
+        for opti_out in outputs
+    }
 
     output_list = []
-    for opti_out in outputs:
-        if opti_out.name in objectives.names:
-            obj = [obj for obj in objectives if obj.name == opti_out.name]
-            if len(obj) > 1:
-                raise NotImplementedError(
-                    "Outputs appearing in multiple constraints is not yet supported in the converter."
+    for out, objs in outs_and_objs.items():
+        objs = [None] if len(objs) == 0 else objs
+        for idx, obj in enumerate(objs):
+            bof_obj = None
+            if isinstance(obj, CloseToTarget):
+                bof_obj = CloseToTargetObjective(
+                    target_value=obj.target, exponent=obj.exponent
                 )
+            elif isinstance(obj, Maximize):
+                bof_obj = MaximizeObjective()
+            elif isinstance(obj, Minimize):
+                bof_obj = MinimizeObjective()
+            elif obj is not None:
+                raise Exception("Unhandled objective type: {type(obj)}")
+
+            # if there are multiple objectives associated with a single input,
+            # give the resulting outputs in the bofire domain different names
+            if len(objs) > 1:
+                suffix = f"_{idx}"
             else:
-                obj = obj[0]
-        else:
-            obj = None
+                suffix = ""
 
-        if isinstance(obj, CloseToTarget):
-            # then build a CloseToTargetObjective
-            obj = CloseToTargetObjective(target_value=obj.target, exponent=obj.exponent)
-        elif isinstance(obj, Maximize):
-            obj = MaximizeObjective()
-        elif isinstance(obj, Minimize):
-            obj = MinimizeObjective()
-        elif obj is not None:  # throw an unhandled exception
-            print(obj)
-            raise Exception("Unhandled objective type")
-
-        if opti_out.type == "continuous":
-            out = ContinuousOutput(key=opti_out.name, objective=obj)
-        else:
-            out = Output(key=opti_out.name, objective=obj, type=opti_out.type)
-        output_list.append(out)
+            if outputs[out].type != "continuous":
+                warn(f"{out} has been converted to a continuous output.")
+            bof_out = ContinuousOutput(key=f"{out}{suffix}", objective=bof_obj)
+            output_list.append(bof_out)
 
     return output_list
 
@@ -218,7 +230,7 @@ def convert_problem(opti_problem: Problem) -> Domain:
         domain_constraints = None
 
     domain_outputs = convert_outputs_and_objectives(
-        opti_problem.outputs, opti_problem.objectives
+        opti_problem.outputs, opti_problem.objectives, opti_problem.output_constraints
     )
 
     bofire_domain = Domain.from_lists(
