@@ -12,8 +12,6 @@ Here is an example of converting a `Problem` object from [mopti](https://github.
 
 ```python
 from domainconverters.opti_to_domain import convert_problem
-from opti import Continuous, Minimize, Objectives, Parameters, Problem
-from opti.constraint import Constraints, NonlinearInequality
 from opti.problems.multi import Daechert1
 
 # Use one of the opti built-in problems as an example
