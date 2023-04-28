@@ -14,13 +14,9 @@ Here is an example of converting a `Problem` object from [mopti](https://github.
 from domainconverters.opti_to_domain import convert_problem
 from opti import Continuous, Minimize, Objectives, Parameters, Problem
 from opti.constraint import Constraints, NonlinearInequality
+from opti.problems.multi import Daechert1
 
-myproblem = Problem(
-                    inputs=Parameters([Continuous('x1', domain=[78.0, 102.0]), 
-                                       Continuous('x2', domain=[33.0, 45.0])]),
-                    outputs=Parameters([Continuous('y0')]),
-                    objectives=Objectives([Minimize('y0')]),
-                    constraints=Constraints([NonlinearInequality('(85.334407 + 0.0056858 * x2 * x1 ) - 92.0')])
-                    )
+# Use one of the opti built-in problems as an example
+myproblem = Daechert1()                    
 mydomain = convert_problem(myproblem)
 ```
