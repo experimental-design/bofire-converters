@@ -32,6 +32,12 @@ from opti.problems.cbo_benchmarks import (
     TensionCompression,
     WeldedBeam1,
 )
+from opti.problems.detergent import (
+    Detergent,
+    Detergent_NChooseKConstraint,
+    Detergent_OutputConstraint,
+    Detergent_TwoOutputConstraints,
+)
 from opti.problems.mixed import DiscreteFuelInjector, DiscreteVLMOP2
 from opti.problems.multi import (
     Daechert1,
@@ -74,6 +80,11 @@ test_problems = [
     WeldedBeam(),
     Hyperellipsoid(),
     OmniTest(),
+    Detergent(),
+    Detergent_NChooseKConstraint(),
+    Detergent_OutputConstraint(discrete=True),
+    Detergent_OutputConstraint(discrete=False),
+    Detergent_TwoOutputConstraints(),
 ]
 
 
