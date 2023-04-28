@@ -94,7 +94,10 @@ def convert_outputs_and_objectives(
     and (at least) predicted, and also objectives, which refer by name to the
     outputs. Bofire does it differently; objectives are specified within
     outputs so that a list of bofire outputs contains the same information as both
-    outputs and objectives from opti.
+    outputs and objectives from opti. Furthermore, opti allows output constraints,
+    which in this function are converted to objectives. Bofire also lacks any
+    type of non-continuous output, so all outputs gets coerced to a
+    ContinuousOutput here with a warning if the original output was not continuous.
 
     Questions about parameters and tolerances:
     https://github.com/experimental-design/bofire/issues/77#issuecomment-1521418422
