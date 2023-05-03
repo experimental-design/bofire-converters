@@ -11,6 +11,7 @@ from bofire.data_models.constraints.api import (
 from bofire.data_models.domain.api import Domain
 from bofire.data_models.features.api import (
     CategoricalInput,
+    CategoricalOutput,
     ContinuousInput,
     ContinuousOutput,
     DiscreteInput,
@@ -95,9 +96,7 @@ def convert_outputs_and_objectives(
     outputs. Bofire does it differently; objectives are specified within
     outputs so that a list of bofire outputs contains the same information as both
     outputs and objectives from opti. Furthermore, opti allows output constraints,
-    which in this function are converted to objectives. Bofire also lacks any
-    type of non-continuous output, so all outputs gets coerced to a
-    ContinuousOutput here with a warning if the original output was not continuous.
+    which in this function are converted to objectives.
 
     Questions about parameters and tolerances:
     https://github.com/experimental-design/bofire/issues/77#issuecomment-1521418422
@@ -145,9 +144,26 @@ def convert_outputs_and_objectives(
             else:
                 suffix = ""
 
-            if outputs[out].type != "continuous":
+            if outputs[out].type == "continuous":
+                bof_out = ContinuousOutput(key=f"{out}{suffix}", objective=bof_obj)
+            elif outputs[out].type == "discrete":
                 warn(f"{out} has been converted to a continuous output.")
-            bof_out = ContinuousOutput(key=f"{out}{suffix}", objective=bof_obj)
+                bof_out = ContinuousOutput(key=f"{out}{suffix}", objective=bof_obj)
+            elif outputs[out].type == "categorical":
+                warn(
+                    f"Categorical output {out} has been entered into an objective with equal weights assigned to each category."
+                )
+                bof_out = CategoricalOutput(
+                    key=f"{out}{suffix}",
+                    type="CategoricalOutput",
+                    categories=outputs[out].domain,
+                    objective=[
+                        1.0 / len(outputs[out].domain) for _ in outputs[out].domain
+                    ],
+                )
+            else:
+                raise Exception("Unhandled output type: {outputs[out].type}")
+
             output_list.append(bof_out)
 
     return output_list
