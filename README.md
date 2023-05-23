@@ -1,6 +1,6 @@
-# Tools to convert objects between bofire and, eg, mopti.
+# Mopti Problem to Bofire Domain Converter
 
-These tools are to help with migration of legacy applications from other BO frameworks to BoFire, and improve quality-of-life.
+These tools are to help with migration of legacy applications from other Mopti to BoFire, and improve quality-of-life.
 
 ## Quick start
 

@@ -23,5 +23,5 @@ repos:
         stages: [commit]
         entry: isort
         types: [python]
-
+# replace isort and flake8 by ruff
 exclude: "README.md"

@@ -157,6 +157,11 @@ def test_convert_outputs_and_objectives():
         out_list = convert_outputs_and_objectives(outputs, objectives)
 
     assert len(out_list) == 4
-    # we used to check these but now all outputs are converted to continuous
+    # we used to check these but now all outputs are converted to continuous 
+    # << why is this uncommented test not deleted?
     # assert out_list[0].type == "discrete"
     # assert out_list[-1].type == "categorical"
+
+
+if __name__ =="__main__":
+    test_convert_outputs_and_objectives()

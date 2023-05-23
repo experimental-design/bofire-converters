@@ -46,8 +46,8 @@ from opti.constraint import (
 
 
 def convert_inputs(inputs: Parameters) -> List:
-    """Make the Bofire equivalent to a Parameters objects from (m)opti
-
+    """Make the Bofire equivalent to a Parameters objects from (m)opti  
+                                           << Parameters or only inputs?
     Parameters:
         inputs: The inputs from an opti problem generated using
         Parameters
@@ -75,6 +75,7 @@ def convert_inputs(inputs: Parameters) -> List:
     }
 
     # convert_types_bounds={'discrete': values,'continuous': bounds,'categorical':categories},
+    # << if you don't need it, delete it. otherwise remove the comment
 
     d_inputs = []
     for key, value in inputs.parameters.items():
@@ -82,13 +83,15 @@ def convert_inputs(inputs: Parameters) -> List:
         d_type = convert_types[value.type]["type"](**kwargs)
         d_inputs.append(d_type)
     return d_inputs
+    #          << why not an Inputs object, since this function looks as if it was part
+    #             of the public interface of this lib?
 
 
 def convert_outputs_and_objectives(
     outputs: Parameters,
     objectives: Objectives,
     output_constraints: Optional[Objectives] = None,
-) -> List:
+) -> List: # << List[Output] ?
     """Make BoFire outputs from opti outputs and objectives
 
     opti specifies experimental outputs, which are quantities to be observed
@@ -152,7 +155,7 @@ def convert_outputs_and_objectives(
             elif outputs[out].type == "categorical":
                 warn(
                     f"Categorical output {out} has been entered into an objective with equal weights assigned to each category."
-                )
+                ) # << remove the warning, because weigths all equal is opti behaviour
                 bof_out = CategoricalOutput(
                     key=f"{out}{suffix}",
                     type="CategoricalOutput",
@@ -162,17 +165,18 @@ def convert_outputs_and_objectives(
                     ],
                 )
             else:
-                raise Exception("Unhandled output type: {outputs[out].type}")
+                raise Exception(f"Unhandled output type: {outputs[out].type}")
 
             output_list.append(bof_out)
 
     return output_list
 
 
-def convert_constraints(opti_constraints: Constraints) -> List:
+def convert_constraints(opti_constraints: Constraints) -> List: 
+                                                        # << why no Constraints object?
     """opti constraints to bofire constraints
 
-    Just straightforward renaming here.
+    Just straightforward renaming here. << this comment seems at least confusing
 
     Parameters:
         opti_constraints: The constraints to be converted
@@ -195,8 +199,8 @@ def convert_constraints(opti_constraints: Constraints) -> List:
         )
     for cnstr in opti_constraints.get(types=NonlinearEquality):
         domain_constraints.append(
-            NonlinearEqualityConstraint(expression=cnstr.expression)
-        )
+            NonlinearEqualityConstraint(expression=cnstr.expression)  # are there tests
+        )                                                             # for this?
     for cnstr in opti_constraints.get(types=NonlinearInequality):
         domain_constraints.append(
             NonlinearInequalityConstraint(expression=cnstr.expression)
@@ -261,7 +265,9 @@ def convert_problem(opti_problem: Problem) -> Domain:
     return bofire_domain
 
 
-if __name__ == "__main__":
+# << transfer the below part into test to be run in the pipeline or if it is already, 
+# delete it?
+if __name__ == "__main__": 
     # inputs = Parameters(
     #     [
     #         Discrete("x1", domain=[0.0, 1.0, 2.0, 3.0]),
