@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools", "setuptools_scm[toml]", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+local_scheme = "node-and-date"
+write_to = "./domainconverters/version.py"
+[tool.ruff]
+ignore = [
+    "E501",  # don't enforce for comments and docstrings
+    "B017",  # required for tests
+    "B027",  # required for optional _tell method
+    "B028",
+    "B904",
+    "B905"
+]
+line-length = 88
+select = ["B", "C", "E", "F", "W", "I"]
+
+[tool.ruff.mccabe]
+max-complexity = 18
+
+[project]
+name = "bofire-converters"
+authors = ""
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = ["Development Status :: 1 - Planning",
+        "Programming Language :: Python :: 3 :: Only",
+        "License :: OSI Approved :: BSD License",
+        "Topic :: Scientific/Engineering",
+        "Intended Audience :: Science/Research",
+        "Intended Audience :: Developers"]
+dependencies = [
+    "mopti==0.10.10",
+    "bofire==0.0.4",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest ~=7.3.2",
+]
