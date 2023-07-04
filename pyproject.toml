@@ -4,7 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
 local_scheme = "node-and-date"
-write_to = "./domainconverters/version.py"
+write_to = "./bofire_converters/version.py"
+
 [tool.ruff]
 ignore = [
     "E501",  # don't enforce for comments and docstrings
@@ -21,7 +22,7 @@ select = ["B", "C", "E", "F", "W", "I"]
 max-complexity = 18
 
 [project]
-name = "bofire-converters"
+name = "bofire_converters"
 version = "0.0.1"
 license = { file = "LICENSE" }
 readme = "README.md"
