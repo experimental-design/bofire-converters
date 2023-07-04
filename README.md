@@ -1,17 +1,17 @@
 # Mopti Problem to Bofire Domain Converter
 
-These tools are to help with migration of legacy applications from other Mopti to BoFire, and improve quality-of-life.
+These tools are to help with migration of legacy applications from [Mopti](https://github.com/basf/mopti) to [BoFire](https://github.com/experimental-design/bofire). Mopti is for defining optimization problems (inputs, outputs, constraints, ...) and has some sampling utilities. If you have a _problem_ defined in the Mopti format, `bofire_converters` can help you to create the corresponding BoFire object, which is called a _domain_.
 
 ## Quick start
 
-Clone this repo, then change to the directory you just cloned (the one containing setup.py) and do 
+Install via pip
 
-`pip install .`
+`pip install bofire-converters`
 
-Here is an example of converting a `Problem` object from [mopti](https://github.com/basf/mopti) to a BoFire `Domain`.
+Here is an example of converting a `Problem` object from [Mopti](https://github.com/basf/mopti) to a BoFire `Domain`.
 
 ```python
-from domainconverters.opti_to_domain import convert_problem
+from bofire_converters.opti_to_domain import convert_problem
 from opti.problems.multi import Daechert1
 
 # Use one of the opti built-in problems as an example
