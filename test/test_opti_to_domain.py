@@ -50,7 +50,7 @@ from opti.problems.multi import (
     WeldedBeam,
 )
 
-from domainconverters.opti_to_domain import (
+from bofire_converters.opti_to_domain import (
     convert_constraints,
     convert_inputs,
     convert_outputs_and_objectives,
@@ -91,7 +91,7 @@ test_problems = [
 @pytest.mark.parametrize("test_problem", test_problems)
 def test_convert_benchmarks(test_problem):
     if not all(
-        [otype == "continuous" for otype in [o.type for o in test_problem.outputs]]
+        otype == "continuous" for otype in [o.type for o in test_problem.outputs]
     ):
         with pytest.warns(UserWarning):
             bofire_domain = convert_problem(test_problem)
