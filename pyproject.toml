@@ -37,6 +37,9 @@ dependencies = [
     "bofire>=0.0.4",
 ]
 
+[project.urls]
+Homepage = "https://github.com/experimental-design/bofire-converters"
+
 [project.optional-dependencies]
 test = [
     "pytest ~=7.3.2",
