@@ -33,4 +33,8 @@ jobs:
       - name: pyright
         run: |
           pip install pyright .
-          pyright
+          pyright bofire_converters
+      - name: pyright test
+        run: |
+          pip install pytest
+          pyright test
