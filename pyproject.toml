@@ -23,7 +23,6 @@ max-complexity = 18
 
 [project]
 name = "bofire_converters"
-version = "0.0.2"
 license = { file = "LICENSE" }
 readme = "README.md"
 requires-python = ">=3.7"
@@ -43,5 +42,5 @@ Homepage = "https://github.com/experimental-design/bofire-converters"
 
 [project.optional-dependencies]
 test = [
-    "pytest ~=7.3.2",
+    "pytest>=8.1.1",
 ]
