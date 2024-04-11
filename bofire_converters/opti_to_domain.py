@@ -1,8 +1,11 @@
-from typing import List, Optional
+from typing import Dict, List, Optional, cast
 from warnings import warn
 
+import opti
+import opti.objective as opti_o
+import opti.parameter as opti_p
 from bofire.data_models.constraints.api import (
-    Constraint,
+    AnyConstraint,
     LinearEqualityConstraint,
     LinearInequalityConstraint,
     NChooseKConstraint,
@@ -11,37 +14,24 @@ from bofire.data_models.constraints.api import (
 )
 from bofire.data_models.domain.api import Domain
 from bofire.data_models.features.api import (
+    AnyOutput,
     CategoricalInput,
     CategoricalOutput,
     ContinuousInput,
     ContinuousOutput,
     DiscreteInput,
-    Output,
 )
 from bofire.data_models.objectives.api import (
+    AnyCategoricalObjective,
+    AnyObjective,
     CloseToTargetObjective,
+    ConstrainedCategoricalObjective,
     MaximizeObjective,
     MinimizeObjective,
 )
-from opti import (
-    CloseToTarget,
-    Maximize,
-    Minimize,
-    Objectives,
-    Parameters,
-    Problem,
-)
-from opti.constraint import (
-    Constraints,
-    LinearEquality,
-    LinearInequality,
-    NChooseK,
-    NonlinearEquality,
-    NonlinearInequality,
-)
 
 
-def convert_inputs(inputs: Parameters) -> List:
+def convert_inputs(inputs: opti.Parameters) -> List:
     """Make the Bofire equivalent to an inputs objects from (m)opti
 
     Parameters:
@@ -78,11 +68,40 @@ def convert_inputs(inputs: Parameters) -> List:
     return d_inputs
 
 
+def _convert_obj_cont_disc(obj: opti_o.Objective) -> AnyObjective:
+    if isinstance(obj, opti.CloseToTarget):
+        return CloseToTargetObjective(target_value=obj.target, exponent=obj.exponent)
+    elif isinstance(obj, opti.Maximize):
+        return MaximizeObjective()
+    elif isinstance(obj, opti.Minimize):
+        return MinimizeObjective()
+    elif isinstance(obj, opti.CloseToTarget):
+        return CloseToTargetObjective(target_value=obj.target, exponent=obj.exponent)
+    elif obj is not None:
+        raise Exception("Unhandled objective type: {type(obj)}")
+
+
+def _convert_obj_cat(
+    parameter_domain: List[str], obj: opti_o.Objective
+) -> AnyCategoricalObjective:
+    if isinstance(obj, opti.CloseToTarget):
+        domain = cast(List[str], parameter_domain)
+        return ConstrainedCategoricalObjective(
+            categories=domain, desirability=[d == obj.target for d in domain]
+        )
+    elif isinstance(obj, opti.Maximize):
+        raise ValueError("cannot maximize categorical output")
+    elif isinstance(obj, opti.Minimize):
+        raise ValueError("cannot minimize categorical output")
+    elif obj is not None:
+        raise Exception("Unhandled objective type: {type(obj)}")
+
+
 def convert_outputs_and_objectives(
-    outputs: Parameters,
-    objectives: Objectives,
-    output_constraints: Optional[Objectives] = None,
-) -> List[Output]:
+    outputs: opti.Parameters,
+    objectives: opti.Objectives,
+    output_constraints: Optional[opti.Objectives] = None,
+) -> List[AnyOutput]:
     """Make BoFire outputs from opti outputs and objectives
 
     opti specifies experimental outputs, which are quantities to be observed
@@ -106,31 +125,21 @@ def convert_outputs_and_objectives(
     """
     # Treat output constraints from opti problems like objectives
     if output_constraints is not None:
-        objectives = Objectives(objectives.objectives + output_constraints.objectives)
+        objectives = opti.Objectives(
+            objectives.objectives + output_constraints.objectives
+        )
 
     # create a dict where each key is an output and the values are the objectives in which
     # that output appears
-    outs_and_objs = {
+    outs_and_objs: Dict[str, List[opti_o.Objective]] = {
         opti_out.name: [obj for obj in objectives if obj.name == opti_out.name]
         for opti_out in outputs
     }
 
     output_list = []
-    for out, objs in outs_and_objs.items():
+    for out_name, objs in outs_and_objs.items():
         objs = [None] if len(objs) == 0 else objs
         for idx, obj in enumerate(objs):
-            bof_obj = None
-            if isinstance(obj, CloseToTarget):
-                bof_obj = CloseToTargetObjective(
-                    target_value=obj.target, exponent=obj.exponent
-                )
-            elif isinstance(obj, Maximize):
-                bof_obj = MaximizeObjective()
-            elif isinstance(obj, Minimize):
-                bof_obj = MinimizeObjective()
-            elif obj is not None:
-                raise Exception("Unhandled objective type: {type(obj)}")
-
             # if there are multiple objectives associated with a single input,
             # give the resulting outputs in the bofire domain different names
             if len(objs) > 1:
@@ -138,29 +147,38 @@ def convert_outputs_and_objectives(
             else:
                 suffix = ""
 
-            if outputs[out].type == "continuous":
-                bof_out = ContinuousOutput(key=f"{out}{suffix}", objective=bof_obj)
-            elif outputs[out].type == "discrete":
-                warn(f"{out} has been converted to a continuous output.")
-                bof_out = ContinuousOutput(key=f"{out}{suffix}", objective=bof_obj)
-            elif outputs[out].type == "categorical":
+            output: opti_p.Parameter = outputs[out_name]
+
+            if output.type == "continuous":
+                bof_obj = obj and _convert_obj_cont_disc(obj)
+                bof_out = ContinuousOutput(key=f"{out_name}{suffix}", objective=bof_obj)
+            elif output.type == "discrete":
+                warn(f"{out_name} has been converted to a continuous output.")
+                bof_obj = obj and _convert_obj_cont_disc(obj)
+                bof_out = ContinuousOutput(key=f"{out_name}{suffix}", objective=bof_obj)
+            elif output.type == "categorical":
+                domain = cast(List[str], output.domain)
+                if obj is None:
+                    bof_obj = ConstrainedCategoricalObjective(
+                        categories=domain, desirability=[True] * len(domain)
+                    )
+                else:
+                    bof_obj = _convert_obj_cat(domain, obj)
                 bof_out = CategoricalOutput(
-                    key=f"{out}{suffix}",
+                    key=f"{out_name}{suffix}",
                     type="CategoricalOutput",
-                    categories=outputs[out].domain,
-                    objective=[
-                        1.0 / len(outputs[out].domain) for _ in outputs[out].domain
-                    ],
+                    categories=domain,
+                    objective=bof_obj,
                 )
             else:
-                raise Exception(f"Unhandled output type: {outputs[out].type}")
+                raise Exception(f"Unhandled output type: {outputs[out_name].type}")
 
             output_list.append(bof_out)
 
     return output_list
 
 
-def convert_constraints(opti_constraints: Constraints) -> List[Constraint]:
+def convert_constraints(opti_constraints: opti.Constraints) -> List[AnyConstraint]:
     """opti constraints to bofire constraints
 
     Parameters:
@@ -170,27 +188,27 @@ def convert_constraints(opti_constraints: Constraints) -> List[Constraint]:
         List of bofire constraints
     """
     domain_constraints = []
-    for cnstr in opti_constraints.get(types=LinearEquality):
+    for cnstr in opti_constraints.get(types=opti.LinearEquality):
         domain_constraints.append(
             LinearEqualityConstraint(
                 features=cnstr.names, coefficients=cnstr.lhs.tolist(), rhs=cnstr.rhs
             )
         )
-    for cnstr in opti_constraints.get(types=LinearInequality):
+    for cnstr in opti_constraints.get(types=opti.LinearInequality):
         domain_constraints.append(
             LinearInequalityConstraint(
                 features=cnstr.names, coefficients=cnstr.lhs.tolist(), rhs=cnstr.rhs
             )
         )
-    for cnstr in opti_constraints.get(types=NonlinearEquality):
+    for cnstr in opti_constraints.get(types=opti.NonlinearEquality):
         domain_constraints.append(
             NonlinearEqualityConstraint(expression=cnstr.expression)
         )
-    for cnstr in opti_constraints.get(types=NonlinearInequality):
+    for cnstr in opti_constraints.get(types=opti.NonlinearInequality):
         domain_constraints.append(
             NonlinearInequalityConstraint(expression=cnstr.expression)
         )
-    for cnstr in opti_constraints.get(types=NChooseK):
+    for cnstr in opti_constraints.get(types=opti.NChooseK):
         domain_constraints.append(
             NChooseKConstraint(
                 features=cnstr.names,
@@ -203,7 +221,7 @@ def convert_constraints(opti_constraints: Constraints) -> List[Constraint]:
     return domain_constraints
 
 
-def convert_problem(opti_problem: Problem) -> Domain:
+def convert_problem(opti_problem: opti.Problem) -> Domain:
     """Turn an opti problem into the equivalent bofire domain
 
     Parameters:
@@ -243,8 +261,8 @@ def convert_problem(opti_problem: Problem) -> Domain:
 
     bofire_domain = Domain.from_lists(
         inputs=domain_inputs,
-        outputs=domain_outputs,
-        constraints=domain_constraints,
+        outputs=list(domain_outputs),
+        constraints=domain_constraints and list(domain_constraints),
     )
 
     return bofire_domain
