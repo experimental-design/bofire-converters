@@ -157,6 +157,9 @@ def test_convert_outputs_and_objectives():
         out_list = convert_outputs_and_objectives(outputs, objectives)
 
     assert len(out_list) == 4
-    # we used to check these but now all outputs are converted to continuous
-    # assert out_list[0].type == "discrete"
-    # assert out_list[-1].type == "categorical"
+    assert (
+        out_list[0].type == "ContinuousOutput"
+    )  # discrete will be converted to continuous
+    assert out_list[1].type == "ContinuousOutput"
+    assert out_list[2].type == "ContinuousOutput"
+    assert out_list[3].type == "CategoricalOutput"

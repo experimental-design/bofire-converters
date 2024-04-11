@@ -1,17 +1,10 @@
 repos:
-  - repo: https://github.com/psf/black
-    rev: 22.10.0
-    hooks:
-      - id: black
-        name: black
-        stages: [commit]
-        entry: black
-        types: [python]
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: "v0.0.274"
+    rev: "v0.3.5"
     hooks:
       - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
+        args: [--fix]
+      - id: ruff-format
   
 exclude: "README.md"
