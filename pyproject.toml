@@ -34,8 +34,8 @@ classifiers = ["Development Status :: 1 - Planning",
         "Intended Audience :: Science/Research",
         "Intended Audience :: Developers"]
 dependencies = [
-    "mopti==0.10.10",
-    "bofire>=0.0.4",
+    "mopti>=0.10.10",
+    "bofire>=0.0.12",
 ]
 
 [project.urls]
