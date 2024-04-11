@@ -9,6 +9,8 @@ on:
 jobs:
   build-n-publish:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
       - uses: actions/checkout@master
       - name: Set up Python 3.10
@@ -30,4 +32,4 @@ jobs:
           --outdir dist/
           .
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@v1
+        uses: pypa/gh-action-pypi-publish@release/v1
