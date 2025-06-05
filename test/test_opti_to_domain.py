@@ -104,6 +104,7 @@ def test_convert_benchmarks(test_problem):
 
 
 def test_convert_constraints():
+    inputs = ["x1", "x2", "x3"]
     cnstrs = Constraints(
         [
             LinearEquality(["x1", "x2", "x3"], lhs=[1, 1, 1], rhs=1),
@@ -113,8 +114,7 @@ def test_convert_constraints():
             NChooseK(["x1", "x2"], max_active=2),
         ]
     )
-    bofire_constraints = convert_constraints(cnstrs)
-    print(bofire_constraints)
+    bofire_constraints = convert_constraints(cnstrs, inputs)
     assert isinstance(bofire_constraints, list)
     assert len(bofire_constraints) == 5
 
@@ -163,3 +163,7 @@ def test_convert_outputs_and_objectives():
     assert out_list[1].type == "ContinuousOutput"
     assert out_list[2].type == "ContinuousOutput"
     assert out_list[3].type == "CategoricalOutput"
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v", "-s"])
