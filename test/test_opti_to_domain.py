@@ -117,6 +117,16 @@ def test_convert_constraints():
     bofire_constraints = convert_constraints(cnstrs, inputs)
     assert isinstance(bofire_constraints, list)
     assert len(bofire_constraints) == 5
+    inputs = ["x", "x1", "x2", "x3"]
+    # with x
+    optc = Constraints([NonlinearInequality("x + x1**2 + x3**2 - 1 + x2")])
+    bofc = convert_constraints(optc, inputs)[0]
+    assert set(bofc.features) == set(inputs)
+    # without x
+    optc = Constraints([NonlinearInequality("x1**2 + x3**2 - 1 + x2")])
+    bofc = convert_constraints(optc, inputs)[0]
+    inputs.remove("x")
+    assert set(bofc.features) == set(inputs)
 
 
 def test_convert_inputs():

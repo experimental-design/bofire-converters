@@ -185,7 +185,16 @@ def _features_nonlinear(
     if constraint.names is not None:
         features = constraint.names
     else:
-        features = [i for i in input_keys if i in constraint.expression]
+        # we sort by length and remove matched keys from the expression to make sure
+        # that, e.g., `x` is not matched with `x1``
+        input_keys = sorted(input_keys, key=lambda x: len(x), reverse=True)
+        expr = constraint.expression
+        features = []
+        for i in input_keys:
+            if i in expr:
+                features.append(i)
+                expr = expr.replace(i, "")
+
     return features
 
 
