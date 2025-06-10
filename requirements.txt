@@ -1,2 +1,2 @@
 mopti>=0.10.10
-bofire>=0.0.12
+bofire>=0.2.0

@@ -178,7 +178,29 @@ def convert_outputs_and_objectives(
     return output_list
 
 
-def convert_constraints(opti_constraints: opti.Constraints) -> List[AnyConstraint]:
+def _features_nonlinear(
+    constraint: opti.NonlinearEquality | opti.NonlinearInequality,
+    input_keys: list[str],
+) -> list[str]:
+    if constraint.names is not None:
+        features = constraint.names
+    else:
+        # we sort by length and remove matched keys from the expression to make sure
+        # that, e.g., `x` is not matched with `x1``
+        input_keys = sorted(input_keys, key=lambda x: len(x), reverse=True)
+        expr = constraint.expression
+        features = []
+        for i in input_keys:
+            if i in expr:
+                features.append(i)
+                expr = expr.replace(i, "")
+
+    return features
+
+
+def convert_constraints(
+    opti_constraints: opti.Constraints, input_keys: list[str]
+) -> List[AnyConstraint]:
     """opti constraints to bofire constraints
 
     Parameters:
@@ -202,11 +224,17 @@ def convert_constraints(opti_constraints: opti.Constraints) -> List[AnyConstrain
         )
     for cnstr in opti_constraints.get(types=opti.NonlinearEquality):
         domain_constraints.append(
-            NonlinearEqualityConstraint(expression=cnstr.expression)
+            NonlinearEqualityConstraint(
+                features=_features_nonlinear(cnstr, input_keys),
+                expression=cnstr.expression,
+            )
         )
     for cnstr in opti_constraints.get(types=opti.NonlinearInequality):
         domain_constraints.append(
-            NonlinearInequalityConstraint(expression=cnstr.expression)
+            NonlinearInequalityConstraint(
+                features=_features_nonlinear(cnstr, input_keys),
+                expression=cnstr.expression,
+            )
         )
     for cnstr in opti_constraints.get(types=opti.NChooseK):
         domain_constraints.append(
@@ -251,7 +279,9 @@ def convert_problem(opti_problem: opti.Problem) -> Domain:
 
     domain_inputs = convert_inputs(opti_problem.inputs)
     if opti_problem.constraints is not None:
-        domain_constraints = convert_constraints(opti_problem.constraints)
+        domain_constraints = convert_constraints(
+            opti_problem.constraints, opti_problem.inputs.names
+        )
     else:
         domain_constraints = None
 
