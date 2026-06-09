@@ -5,6 +5,7 @@ import opti
 import opti.objective as opti_o
 import opti.parameter as opti_p
 from bofire.data_models.constraints.api import (
+    AnyConstraint,
     Constraint,
     LinearEqualityConstraint,
     LinearInequalityConstraint,
@@ -14,6 +15,7 @@ from bofire.data_models.constraints.api import (
 )
 from bofire.data_models.domain.api import Domain
 from bofire.data_models.features.api import (
+    AnyOutput,
     CategoricalInput,
     CategoricalOutput,
     ContinuousInput,
@@ -22,6 +24,7 @@ from bofire.data_models.features.api import (
     Output,
 )
 from bofire.data_models.objectives.api import (
+    AnyObjective,
     CloseToTargetObjective,
     ConstrainedCategoricalObjective,
     MaximizeObjective,
@@ -150,10 +153,12 @@ def convert_outputs_and_objectives(
 
             if output.type == "continuous":
                 bof_obj = obj and _convert_obj_cont_disc(obj)
+                bof_obj = cast(AnyObjective, bof_obj)
                 bof_out = ContinuousOutput(key=f"{out_name}{suffix}", objective=bof_obj)
             elif output.type == "discrete":
                 warn(f"{out_name} has been converted to a continuous output.")
                 bof_obj = obj and _convert_obj_cont_disc(obj)
+                bof_obj = cast(AnyObjective, bof_obj)
                 bof_out = ContinuousOutput(key=f"{out_name}{suffix}", objective=bof_obj)
             elif output.type == "categorical":
                 domain = cast(list[str], output.domain)
@@ -295,6 +300,8 @@ def convert_problem(opti_problem: opti.Problem) -> Domain:
     domain_outputs = convert_outputs_and_objectives(
         opti_problem.outputs, opti_problem.objectives, opti_problem.output_constraints
     )
+    domain_outputs = cast(list[AnyOutput], domain_outputs)
+    domain_constraints = cast(list[AnyConstraint], domain_constraints)
 
     bofire_domain = Domain.from_lists(
         inputs=domain_inputs,
