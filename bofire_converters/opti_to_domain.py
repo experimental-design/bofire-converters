@@ -1,11 +1,11 @@
-from typing import Dict, List, Optional, cast
+from typing import cast
 from warnings import warn
 
 import opti
 import opti.objective as opti_o
 import opti.parameter as opti_p
 from bofire.data_models.constraints.api import (
-    AnyConstraint,
+    Constraint,
     LinearEqualityConstraint,
     LinearInequalityConstraint,
     NChooseKConstraint,
@@ -14,24 +14,23 @@ from bofire.data_models.constraints.api import (
 )
 from bofire.data_models.domain.api import Domain
 from bofire.data_models.features.api import (
-    AnyOutput,
     CategoricalInput,
     CategoricalOutput,
     ContinuousInput,
     ContinuousOutput,
     DiscreteInput,
+    Output,
 )
 from bofire.data_models.objectives.api import (
-    AnyCategoricalObjective,
-    AnyObjective,
     CloseToTargetObjective,
     ConstrainedCategoricalObjective,
     MaximizeObjective,
     MinimizeObjective,
+    Objective,
 )
 
 
-def convert_inputs(inputs: opti.Parameters) -> List:
+def convert_inputs(inputs: opti.Parameters) -> list:
     """Make the Bofire equivalent to an inputs objects from (m)opti
 
     Parameters:
@@ -63,12 +62,12 @@ def convert_inputs(inputs: opti.Parameters) -> List:
     d_inputs = []
     for key, value in inputs.parameters.items():
         kwargs = {"key": key, convert_types[value.type]["domain"]: value.domain}
-        d_type = convert_types[value.type]["type"](**kwargs)
+        d_type = convert_types[value.type]["type"](**kwargs)  # type: ignore
         d_inputs.append(d_type)
     return d_inputs
 
 
-def _convert_obj_cont_disc(obj: opti_o.Objective) -> AnyObjective:
+def _convert_obj_cont_disc(obj: opti_o.Objective) -> Objective:
     if isinstance(obj, opti.CloseToTarget):
         return CloseToTargetObjective(target_value=obj.target, exponent=obj.exponent)
     elif isinstance(obj, opti.Maximize):
@@ -82,10 +81,10 @@ def _convert_obj_cont_disc(obj: opti_o.Objective) -> AnyObjective:
 
 
 def _convert_obj_cat(
-    parameter_domain: List[str], obj: opti_o.Objective
-) -> AnyCategoricalObjective:
+    parameter_domain: list[str], obj: opti_o.Objective
+) -> ConstrainedCategoricalObjective:
     if isinstance(obj, opti.CloseToTarget):
-        domain = cast(List[str], parameter_domain)
+        domain = parameter_domain
         return ConstrainedCategoricalObjective(
             categories=domain, desirability=[d == obj.target for d in domain]
         )
@@ -100,8 +99,8 @@ def _convert_obj_cat(
 def convert_outputs_and_objectives(
     outputs: opti.Parameters,
     objectives: opti.Objectives,
-    output_constraints: Optional[opti.Objectives] = None,
-) -> List[AnyOutput]:
+    output_constraints: opti.Objectives | None = None,
+) -> list[Output]:
     """Make BoFire outputs from opti outputs and objectives
 
     opti specifies experimental outputs, which are quantities to be observed
@@ -131,7 +130,7 @@ def convert_outputs_and_objectives(
 
     # create a dict where each key is an output and the values are the objectives in which
     # that output appears
-    outs_and_objs: Dict[str, List[opti_o.Objective]] = {
+    outs_and_objs: dict[str, list[opti_o.Objective]] = {
         opti_out.name: [obj for obj in objectives if obj.name == opti_out.name]
         for opti_out in outputs
     }
@@ -157,7 +156,7 @@ def convert_outputs_and_objectives(
                 bof_obj = obj and _convert_obj_cont_disc(obj)
                 bof_out = ContinuousOutput(key=f"{out_name}{suffix}", objective=bof_obj)
             elif output.type == "categorical":
-                domain = cast(List[str], output.domain)
+                domain = cast(list[str], output.domain)
                 if obj is None:
                     bof_obj = ConstrainedCategoricalObjective(
                         categories=domain, desirability=[True] * len(domain)
@@ -200,7 +199,7 @@ def _features_nonlinear(
 
 def convert_constraints(
     opti_constraints: opti.Constraints, input_keys: list[str]
-) -> List[AnyConstraint]:
+) -> list[Constraint]:
     """opti constraints to bofire constraints
 
     Parameters:
@@ -282,6 +281,14 @@ def convert_problem(opti_problem: opti.Problem) -> Domain:
         domain_constraints = convert_constraints(
             opti_problem.constraints, opti_problem.inputs.names
         )
+        for c in domain_constraints:
+            if isinstance(c, NChooseKConstraint):
+                nck_features = c.features
+                for inp in domain_inputs:
+                    if inp.key in nck_features:
+                        assert isinstance(inp, ContinuousInput)
+                        if inp.bounds[0] > 0 or inp.bounds[1] < 0:
+                            inp.allow_zero = True
     else:
         domain_constraints = None
 
